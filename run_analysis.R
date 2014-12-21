@@ -12,11 +12,9 @@ fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%2
 download.file(fileUrl, destfile <- "./data/activity.zip")   
 unzip("./data/activity.zip")
 
+## Read labels and extract the measurements of mean and standard deviation
 activity_labels <- read.table("./UCI HAR Dataset/activity_labels.txt")[,2]
 features <- read.table("./UCI HAR Dataset/features.txt")[,2]
-
-## 2) Extract the measurements of mean and standard deviation
-
 extract_features <- grepl("mean|std", features)
 
 ## Read in test
@@ -29,7 +27,7 @@ subject_test <- read.table("./UCI HAR Dataset/test/subject_test.txt")
 names(X_test) = features
 X_test = X_test[,extract_features]
 
-## 3) Name the activities
+## Name the activities
 Y_test[,2] = activity_labels[Y_test[,1]]
 names(Y_test) = c("Activity_ID", "Activity_Label")
 names(subject_test) = "subject"
@@ -48,22 +46,23 @@ subject_train <- read.table("./UCI HAR Dataset/train/subject_train.txt")
 names(X_train) = features
 X_train = X_train[,extract_features]
 
-## 3) Name the activities
+## Name the activities
 Y_train[,2] = activity_labels[Y_train[,1]]
 names(Y_train) = c("Activity_ID", "Activity_Label")
 names(subject_train) = "subject"
 
-## Merge test data
+## Merge train data
 train <- cbind(as.data.table(subject_train), Y_train, X_train)
 
-## 1) Merge the train and test sets
+## Merge the train and test sets
 data = rbind(test, train)
 
+## Melt the data into unique id-variable combinations
 id_labels = c("subject", "Activity_ID", "Activity_Label")
 data_labels = setdiff(colnames(data), id_labels)
 melt_data = melt(data, id = id_labels, measure.vars = data_labels)
 
-## 5) Create a second data set with averages
+## Create a second tidy data set with averages of each activity for each subject 
 tidy_data = dcast(melt_data, subject + Activity_Label ~ variable, mean)
 
 write.table(tidy_data, file = "./activity_tidy_data.txt")
